@@ -58,11 +58,12 @@ function refreshEvents() {
 
           for (var i = events.data.length-1; i >= 0; --i) {
             if (items.monitoring[events[i].url]) {
-              var monitoring_regions = items.monitoring[events[i].url];
-              var region_idx = monitoring_regions.indexOf(events[i].index);
+              var regions = items.monitoring[events[i].url];
+              var region_idx = regions.indexOf(events[i].index);
 
               if (region_idx != -1 &&
-                monitoring_regions[region_idx].hash_val != events[i].hash_val) {
+                regions[region_idx].active &&
+                regions[region_idx].hash_val != events[i].hash_val) {
                 changed_regions.push(events[i]);
               }
             }
