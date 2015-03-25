@@ -1,5 +1,5 @@
 function buildURL(window) {
-  return window.location.host + "/" + window.location.pathname;
+  return window.location.protocol + "//" + window.location.host + window.location.pathname;
 }
 
 function encodeDOM(elem) {
@@ -55,12 +55,12 @@ function hashCode(text) {
 
 window.addEventListener("load", function (event) {
   // check with local storage
-  chrome.storage.local.get("monitoring", function (items) {
+  chrome.storage.local.get("monitors", function (items) {
     var curr_url = buildURL(window);
-    var regions = items.monitoring[curr_url];
+    var regions = items.monitors[curr_url];
 
     if (regions) {
-      console.log("It's a monitored website. Checking changes...");
+      console.log("[monitor] checking changes...");
       var changed_regions = [];
 
       // if there is a record, fetch the element by index and compute hash
@@ -68,20 +68,26 @@ window.addEventListener("load", function (event) {
         var dom = decodeDOM(regions[i].index);
         var hash = hashCode(dom.innerHTML);
 
-        if (hash != regions[i].hashVal) {
-          changed_regions.push({index: regions[i].index, hashVal: hash});
+        if (hash != regions[i].hash_val) {
+          changed_regions.push({index: regions[i].index, hash_val: hash});
         }
       }
 
       // if there is a change on hash,
       // send the updated regions to the event page
-      if (changed_regions) {
+      if (changed_regions.length > 0) {
+        console.log("[monitor] detecting changes...", changed_regions);
+
         chrome.runtime.sendMessage({
-          type: "changed_regions",
+          event_type: "changed_regions",
           url: curr_url,
           regions: changed_regions
         });
+      } else {
+        console.log("[monitor] no changes have been detected.")
       }
+    } else {
+      console.log("[monitor] not a target.");
     }
   });
 });
