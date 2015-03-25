@@ -1,0 +1,23 @@
+{
+  "name": "CrawlNotifier",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "browser_action": {
+    "default_title": "View monitors",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "permissions": [
+    "alarms",
+    "storage"
+  ]
+}
