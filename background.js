@@ -42,20 +42,31 @@ function updateRegionsForUrl(url, regions) {
   xhr.send(JSON.stringify({regions: regions}));
 }
 
+
 /* Extension code */
 
 var unread_count = 0;
 
+function isEmpty(obj) {
+  return (Object.getOwnPropertyNames(obj).length == 0);
+}
+
 function onInit() {
   // FIXME: for test purpose.
   // chrome.storage.local.set({ "monitors": {} });
-  chrome.storage.local.set({ "monitors": {
-    'http://itswindtw.github.io/': [{index: '#net-info-container', hash_val: 150675848}]
-  } });
+  chrome.storage.local.set({
+    "monitors": {
+      'http://itswindtw.github.io/': {
+        '#net-info-container': { active: true, hash_val: 150675848 }
+      }
+    }
+  });
 
   requestEvents({
     success: function (xhr, events) {
-      chrome.storage.local.set({"last_event_id": events.paging.last});
+      // FIXME: for test purpose
+      // chrome.storage.local.set({"last_event_id": events.paging.last});
+      chrome.storage.local.set({"last_event_id": 0});//events.paging.last});
     }
   });
 
@@ -80,13 +91,11 @@ function refreshEvents() {
           var changed_regions = [];
 
           for (var i = events.data.length-1; i >= 0; --i) {
-            if (items.monitors[events.data[i].url]) {
-              var regions = items.monitors[events[i].url];
-              var region_idx = regions.indexOf(events.data[i].index);
+            if (!isEmpty(items.monitors[events.data[i].url])) {
+              var region = items.monitors[events.data[i].url][events.data[i].index];
 
-              if (region_idx != -1 &&
-                regions[region_idx].active &&
-                regions[region_idx].hash_val != events.data[i].hash_val) {
+              if (region && region.active &&
+                  region.hash_val != events.data[i].hash_val) {
                 changed_regions.push(events.data[i]);
               }
             }
@@ -94,7 +103,6 @@ function refreshEvents() {
 
           unread_count += changed_regions.length;
           chrome.browserAction.setBadgeText({text: unread_count.toString()});
-          console.log(changed_regions);
 
           // TODO: publish changed events to popup
 
@@ -125,12 +133,13 @@ chrome.runtime.onMessage.addListener(
       case 'changed_regions':
         updateRegionsForUrl(request.url, request.regions);
         break;
+      case 'refresh_events':
+        refreshEvents();
+        break;
     }
 
     // TODO:
-    //   refresh event
     //   add region event
-
   });
 
 chrome.runtime.onInstalled.addListener(onInit);

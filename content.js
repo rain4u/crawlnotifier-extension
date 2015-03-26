@@ -1,3 +1,5 @@
+/* utilities */
+
 function buildURL(window) {
   return window.location.protocol + "//" + window.location.host + window.location.pathname;
 }
@@ -53,7 +55,9 @@ function hashCode(text) {
   return hash;
 }
 
-window.addEventListener("load", function (event) {
+/* extension */
+
+function checkContent() {
   // check with local storage
   chrome.storage.local.get("monitors", function (items) {
     var curr_url = buildURL(window);
@@ -64,12 +68,12 @@ window.addEventListener("load", function (event) {
       var changed_regions = [];
 
       // if there is a record, fetch the element by index and compute hash
-      for (var i in regions) {
-        var dom = decodeDOM(regions[i].index);
+      for (var key in regions) {
+        var dom = decodeDOM(key);
         var hash = hashCode(dom.innerHTML);
 
-        if (hash != regions[i].hash_val) {
-          changed_regions.push({index: regions[i].index, hash_val: hash});
+        if (hash != regions[key].hash_val) {
+          changed_regions.push({index: key, hash_val: hash});
         }
       }
 
@@ -90,13 +94,67 @@ window.addEventListener("load", function (event) {
       console.log("[monitor] not a target.");
     }
   });
-});
+}
 
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    // TODO:
-    //   selecting new region
-  });
+function onMouseover(e) {
+  var elem = e.target;
+
+  if(!elem.classList.contains("crawl-hover")) {
+    elem.classList.add("crawl-hover");
+  }
+}
+
+function onMouseout(e) {
+  var elem = e.target;
+
+  if(elem.classList.contains("crawl-hover")) {
+    elem.classList.remove("crawl-hover");
+  }
+}
+
+function enterRegionSelection() {
+  console.log('enterRegionSelection');
+
+  document.getElementsByTagName('html')[0].classList.add('crawl-region-selection');
+  document.addEventListener('mouseover', onMouseover);
+  document.addEventListener('mouseout', onMouseout);
+}
+
+function exitRegionSelection() {
+  console.log('exitRegionSelection');
+
+  document.getElementsByTagName('html')[0].classList.remove('crawl-region-selection');
+  document.removeEventListener('mouseover', onMouseover);
+  document.removeEventListener('mouseout', onMouseout);
+}
+
+function registerEventDispatcher() {
+  chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      switch (request.event_type) {
+        case 'enter_region_selection':
+          enterRegionSelection();
+          break;
+        case 'exit_region_selection':
+          exitRegionSelection();
+          break;
+      }
+    });
+}
+
+function onInit() {
+  checkContent();
+  registerEventDispatcher();
+}
+
+
+
+if (document.readyState == "complete") {
+  onInit();
+} else {
+  window.addEventListener("load", onInit);
+}
+
 
 
 // TODO: send adding new region event to event page

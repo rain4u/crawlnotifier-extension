@@ -1,0 +1,8 @@
+html.crawl-region-selection * {
+  cursor: pointer;
+}
+
+.crawl-hover {
+  transition: box-shadow .25s;
+  box-shadow: 0px 0px 10px 8px rgba(53, 233, 56, .85) !important;
+}
