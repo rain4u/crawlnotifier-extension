@@ -24,6 +24,26 @@ function requestEvents(args) {
   xhr.send();
 }
 
+function requestRegions(url, args) {
+  var xhr = new XMLHttpRequest();
+  var url = SERVER_ENDPOINT + "/urls/" + encodeURIComponent(url);
+
+  xhr.open("GET", url, true);
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4) {
+      if (xhr.responseText) {
+        args.success(xhr, JSON.parse(xhr.responseText));
+      } else if (args.error) {
+        args.error(xhr);
+      } else {
+        console.error("requestRegions");
+      }
+    }
+  }
+
+  xhr.send();
+}
+
 function updateRegionsForUrl(url, regions) {
   var xhr = new XMLHttpRequest();
   var url = SERVER_ENDPOINT + "/urls/" + encodeURIComponent(url);
@@ -33,7 +53,7 @@ function updateRegionsForUrl(url, regions) {
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.onreadystatechange = function () {
     if (xhr.readyState == 4) {
-      if (xhr.status != 200) {
+      if (xhr.status != 200 && xhr.status != 201) {
         console.error("updateRegionsForUrl");
       }
     }
@@ -41,7 +61,6 @@ function updateRegionsForUrl(url, regions) {
 
   xhr.send(JSON.stringify({regions: regions}));
 }
-
 
 /* Extension code */
 
@@ -53,14 +72,14 @@ function isEmpty(obj) {
 
 function onInit() {
   // FIXME: for test purpose.
-  // chrome.storage.local.set({ "monitors": {} });
-  chrome.storage.local.set({
-    "monitors": {
-      'http://itswindtw.github.io/': {
-        '#net-info-container': { active: true, hash_val: 150675848 }
-      }
-    }
-  });
+  chrome.storage.local.set({ "monitors": {} });
+  // chrome.storage.local.set({
+  //   "monitors": {
+  //     'http://itswindtw.github.io/': {
+  //       '#net-info-container': { active: true, hash_val: 150675848 }
+  //     }
+  //   }
+  // });
 
   requestEvents({
     success: function (xhr, events) {
@@ -101,8 +120,12 @@ function refreshEvents() {
             }
           }
 
+          // TODO: add other's monitors
+
           unread_count += changed_regions.length;
-          chrome.browserAction.setBadgeText({text: unread_count.toString()});
+          if (unread_count > 0) {
+            chrome.browserAction.setBadgeText({text: unread_count.toString()});
+          }
 
           // TODO: publish changed events to popup
 
@@ -122,9 +145,23 @@ function refreshEvents() {
   });
 }
 
-
 function onAlarm(alarm) {
   refreshEvents();
+}
+
+function insertRegionToMonitors(url, region) {
+  // FIXME or IGNORE: potential race condition here?
+
+  chrome.storage.local.get("monitors", function (items) {
+    if (!items.monitors[url]) {
+      items.monitors[url] = {};
+    }
+
+    var regions = items.monitors[url];
+    regions[region.index] = { active: true, hash_val: region.hash_val }
+
+    chrome.storage.local.set({monitors: items.monitors});
+  });
 }
 
 chrome.runtime.onMessage.addListener(
@@ -136,10 +173,38 @@ chrome.runtime.onMessage.addListener(
       case 'refresh_events':
         refreshEvents();
         break;
+      case 'add_region':
+        insertRegionToMonitors(request.url, request.region);
+        updateRegionsForUrl(request.url, [request.region]);
+        break;
+      case 'request_regions':
+        // Use local data first, if none, go remote to fetch.
+        chrome.storage.local.get("monitors", function (items) {
+          console.log('request_regions');
+
+          var local_regions = items.monitors[request.url];
+
+          if (local_regions) {
+            sendResponse(local_regions);
+          } else {
+            // request and transform data format
+            requestRegions(request.url, {
+              success: function (xhr, data) {
+                var remote_regions = {};
+                for (var i in data.regions) {
+                  remote_regions[data.regions[i].index] = {
+                    active: false, hash_val: data.regions[i].hash_val
+                  }
+                }
+                sendResponse(remote_regions);
+              }
+            });
+          }
+        })
+        break;
     }
 
-    // TODO:
-    //   add region event
+    return true;
   });
 
 chrome.runtime.onInstalled.addListener(onInit);

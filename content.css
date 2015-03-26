@@ -4,5 +4,15 @@ html.crawl-region-selection * {
 
 .crawl-hover {
   transition: box-shadow .25s;
-  box-shadow: 0px 0px 10px 8px rgba(53, 233, 56, .85) !important;
+  box-shadow: 0px 0px 10px 8px rgba(233, 233, 56, .85) !important;
+}
+
+.crawl-monitored-self {
+  transition: box-shadow .25s;
+  box-shadow: 0px 0px 7px 5px rgba(233, 53, 56, .85);
+}
+
+.crawl-monitored-other {
+  transition: box-shadow .25s;
+  box-shadow: 0px 0px 7px 5px rgba(53, 233, 56, .85);
 }

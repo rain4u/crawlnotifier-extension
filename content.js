@@ -112,12 +112,59 @@ function onMouseout(e) {
   }
 }
 
+function onClick(e) {
+  var elem = e.target;
+  var curr_url = buildURL(window);
+
+  // TODO: change add_region to add_regions
+
+  chrome.runtime.sendMessage({
+    event_type: "add_region",
+    url: curr_url,
+    region: {
+      index: encodeDOM(elem),
+      hash_val: hashCode(elem.innerHTML)
+    }
+  });
+
+  window.setTimeout(function () { onMouseout(e) }, 1000);
+  exitRegionSelection();
+}
+
+function requestRegisteredMonitors(callback) {
+  var curr_url = buildURL(window);
+
+  chrome.runtime.sendMessage({
+    event_type: "request_regions",
+    url: curr_url
+  }, callback);
+}
+
+var tagged_dom_indexes = [];
+
 function enterRegionSelection() {
   console.log('enterRegionSelection');
 
   document.getElementsByTagName('html')[0].classList.add('crawl-region-selection');
   document.addEventListener('mouseover', onMouseover);
   document.addEventListener('mouseout', onMouseout);
+  document.addEventListener('click', onClick);
+
+  requestRegisteredMonitors(function (regions) {
+    for (var index in regions) {
+      if (regions.hasOwnProperty(index)) {
+        var dom = decodeDOM(index);
+
+        if (regions[index].active) {
+          dom.classList.add('crawl-monitored-self');
+        } else {
+          dom.classList.add('crawl-monitored-other');
+        }
+
+        tagged_dom_indexes.push(index);
+      }
+    }
+  });
 }
 
 function exitRegionSelection() {
@@ -126,6 +173,16 @@ function exitRegionSelection() {
   document.getElementsByTagName('html')[0].classList.remove('crawl-region-selection');
   document.removeEventListener('mouseover', onMouseover);
   document.removeEventListener('mouseout', onMouseout);
+  document.removeEventListener('click', onClick);
+
+  for (var i in tagged_dom_indexes) {
+    var dom = decodeDOM(tagged_dom_indexes[i]);
+
+    dom.classList.remove('crawl-monitored-self');
+    dom.classList.remove('crawl-monitored-other');
+  }
+
+  tagged_dom_indexes.length = 0;
 }
 
 function registerEventDispatcher() {
@@ -148,13 +205,8 @@ function onInit() {
 }
 
 
-
 if (document.readyState == "complete") {
   onInit();
 } else {
   window.addEventListener("load", onInit);
 }
-
-
-
-// TODO: send adding new region event to event page
