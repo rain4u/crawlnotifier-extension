@@ -116,28 +116,43 @@ function onClick(e) {
   var elem = e.target;
   var curr_url = buildURL(window);
 
-  // TODO: change add_region to add_regions
+  requestRegisteredRegions(function (regions) {
+    var index = encodeDOM(elem);
+    var hash_val = hashCode(elem.innerHTML);
 
-  chrome.runtime.sendMessage({
-    event_type: "add_region",
-    url: curr_url,
-    region: {
-      index: encodeDOM(elem),
-      hash_val: hashCode(elem.innerHTML)
-    }
+    chrome.runtime.sendMessage({
+      event_type: "add_region",
+      url: curr_url,
+      new_region: {
+        index: index,
+        hash_val: hash_val
+      },
+      existing_regions: regions
+    });
+
+    registered_regions[index] = { active: true, hash_val: hash_val };
   });
 
   window.setTimeout(function () { onMouseout(e) }, 1000);
   exitRegionSelection();
 }
 
-function requestRegisteredMonitors(callback) {
-  var curr_url = buildURL(window);
+var registered_regions = null;
 
-  chrome.runtime.sendMessage({
-    event_type: "request_regions",
-    url: curr_url
-  }, callback);
+function requestRegisteredRegions(callback) {
+  if (registered_regions) {
+    callback(registered_regions);
+  } else {
+    var curr_url = buildURL(window);
+
+    chrome.runtime.sendMessage({
+      event_type: "request_regions",
+      url: curr_url
+    }, function (regions) {
+      registered_regions = regions;
+      callback(regions);
+    });
+  }
 }
 
 var tagged_dom_indexes = [];
@@ -150,7 +165,7 @@ function enterRegionSelection() {
   document.addEventListener('mouseout', onMouseout);
   document.addEventListener('click', onClick);
 
-  requestRegisteredMonitors(function (regions) {
+  requestRegisteredRegions(function (regions) {
     for (var index in regions) {
       if (regions.hasOwnProperty(index)) {
         var dom = decodeDOM(index);

@@ -67,19 +67,19 @@ function updateRegionsForUrl(url, regions) {
 var unread_count = 0;
 
 function isEmpty(obj) {
-  return (Object.getOwnPropertyNames(obj).length == 0);
+  return !obj || (Object.getOwnPropertyNames(obj).length == 0);
 }
 
 function onInit() {
   // FIXME: for test purpose.
-  chrome.storage.local.set({ "monitors": {} });
-  // chrome.storage.local.set({
-  //   "monitors": {
-  //     'http://itswindtw.github.io/': {
-  //       '#net-info-container': { active: true, hash_val: 150675848 }
-  //     }
-  //   }
-  // });
+  // chrome.storage.local.set({ "monitors": {} });
+  chrome.storage.local.set({
+    "monitors": {
+      'http://itswindtw.github.io/': {
+        '#net-info-container': { active: true, hash_val: 150675848 }
+      }
+    }
+  });
 
   requestEvents({
     success: function (xhr, events) {
@@ -98,8 +98,8 @@ function scheduleUpdate() {
 
 
 function refreshEvents() {
-  // TODO: fetch backend's events
-  //       if changed, budge icon and send update event to popup.html
+  // fetch backend's events
+  // if changed, budge icon and send update event to popup.html
   console.log('refreshEvents');
 
   chrome.storage.local.get(["last_event_id", "monitors"], function (items) {
@@ -116,11 +116,14 @@ function refreshEvents() {
               if (region && region.active &&
                   region.hash_val != events.data[i].hash_val) {
                 changed_regions.push(events.data[i]);
+              } else if (!region || !region.active) {
+                items.monitors[events.data[i].url][events.data[i].index] = {
+                  active: false,
+                  hash_val: events.data[i].hash_val
+                }
               }
             }
           }
-
-          // TODO: add other's monitors
 
           unread_count += changed_regions.length;
           if (unread_count > 0) {
@@ -131,7 +134,10 @@ function refreshEvents() {
 
           scheduleUpdate();
 
-          chrome.storage.local.set({"last_event_id": events.paging.end}, function () {
+          chrome.storage.local.set({
+            last_event_id: events.paging.end,
+            monitors: items.monitors
+          }, function () {
             if (events.paging.end != events.paging.last) {
               console.error("!?", events);
               refreshEvents();
@@ -149,16 +155,16 @@ function onAlarm(alarm) {
   refreshEvents();
 }
 
-function insertRegionToMonitors(url, region) {
+function insertRegionToMonitors(url, new_region, existing_regions) {
   // FIXME or IGNORE: potential race condition here?
 
   chrome.storage.local.get("monitors", function (items) {
     if (!items.monitors[url]) {
-      items.monitors[url] = {};
+      items.monitors[url] = existing_regions;
     }
 
     var regions = items.monitors[url];
-    regions[region.index] = { active: true, hash_val: region.hash_val }
+    regions[new_region.index] = { active: true, hash_val: new_region.hash_val }
 
     chrome.storage.local.set({monitors: items.monitors});
   });
@@ -174,8 +180,8 @@ chrome.runtime.onMessage.addListener(
         refreshEvents();
         break;
       case 'add_region':
-        insertRegionToMonitors(request.url, request.region);
-        updateRegionsForUrl(request.url, [request.region]);
+        insertRegionToMonitors(request.url, request.new_region, request.existing_regions);
+        updateRegionsForUrl(request.url, [request.new_region]);
         break;
       case 'request_regions':
         // Use local data first, if none, go remote to fetch.
