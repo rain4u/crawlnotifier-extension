@@ -24,4 +24,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   enter_btn.addEventListener('click', enterRegionSelection);
   exit_btn.addEventListener('click', exitRegionSelection);
+
+  chrome.runtime.sendMessage({
+    event_type: "request_events",
+  }, function (events) {
+    console.log('feeding events in popup.html', events);
+    var table = document.getElementById('events');
+
+    for (var i in events) {
+      var row = table.insertRow(-1);
+      row.innerHTML = events[i].url;
+    }
+  });
 });
+

@@ -126,7 +126,7 @@ function refreshEvents() {
             }
           }
 
-          events_queue.concat(changed_regions);
+          events_queue = events_queue.concat(changed_regions);
           unread_count = changed_regions.length;
           if (unread_count > 0) {
             chrome.browserAction.setBadgeText({text: unread_count.toString()});
@@ -227,7 +227,8 @@ chrome.runtime.onMessage.addListener(
       case 'request_events':
         var published = events_queue.slice(0);
         events_queue.length = 0;
-
+        chrome.browserAction.setBadgeText({text: ''});
+        sendResponse(published);
         break;
     }
 
