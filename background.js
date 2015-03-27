@@ -85,7 +85,7 @@ function onInit() {
     success: function (xhr, events) {
       // FIXME: for test purpose
       // chrome.storage.local.set({"last_event_id": events.paging.last});
-      chrome.storage.local.set({"last_event_id": 0});//events.paging.last});
+      chrome.storage.local.set({ last_event_id: 0 });
     }
   });
 
@@ -96,6 +96,7 @@ function scheduleUpdate() {
   chrome.alarms.create('refresh', { periodInMinutes: 1.0 });
 }
 
+var events_queue = [];
 
 function refreshEvents() {
   // fetch backend's events
@@ -125,12 +126,11 @@ function refreshEvents() {
             }
           }
 
-          unread_count += changed_regions.length;
+          events_queue.concat(changed_regions);
+          unread_count = changed_regions.length;
           if (unread_count > 0) {
             chrome.browserAction.setBadgeText({text: unread_count.toString()});
           }
-
-          // TODO: publish changed events to popup
 
           scheduleUpdate();
 
@@ -139,7 +139,7 @@ function refreshEvents() {
             monitors: items.monitors
           }, function () {
             if (events.paging.end != events.paging.last) {
-              console.error("!?", events);
+              console.log("events have next page...requesting...");
               refreshEvents();
             }
           });
@@ -155,6 +155,18 @@ function onAlarm(alarm) {
   refreshEvents();
 }
 
+function updateRegionsToMonitors(url, new_regions) {
+  chrome.storage.local.get("monitors", function (items) {
+    var regions = items.monitors[url];
+
+    for (var i in new_regions) {
+      regions[new_regions[i].index].hash_val = new_regions[i].hash_val
+    }
+
+    chrome.storage.local.set({monitors: items.monitors});
+  });
+}
+
 function insertRegionToMonitors(url, new_region, existing_regions) {
   // FIXME or IGNORE: potential race condition here?
 
@@ -164,9 +176,12 @@ function insertRegionToMonitors(url, new_region, existing_regions) {
     }
 
     var regions = items.monitors[url];
-    regions[new_region.index] = { active: true, hash_val: new_region.hash_val }
+    regions[new_region.index] = {
+      active: true,
+      hash_val: new_region.hash_val
+    }
 
-    chrome.storage.local.set({monitors: items.monitors});
+    chrome.storage.local.set({ monitors: items.monitors });
   });
 }
 
@@ -174,6 +189,7 @@ chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
     switch (request.event_type) {
       case 'changed_regions':
+        updateRegionsToMonitors(request.url, request.regions);
         updateRegionsForUrl(request.url, request.regions);
         break;
       case 'refresh_events':
@@ -207,6 +223,11 @@ chrome.runtime.onMessage.addListener(
             });
           }
         })
+        break;
+      case 'request_events':
+        var published = events_queue.slice(0);
+        events_queue.length = 0;
+
         break;
     }
 

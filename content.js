@@ -109,12 +109,19 @@ function onMouseout(e) {
 
   if(elem.classList.contains("crawl-hover")) {
     elem.classList.remove("crawl-hover");
+
+    if (elem.classList.length == 0) {
+      elem.removeAttribute('class');
+    }
   }
 }
 
 function onClick(e) {
   var elem = e.target;
   var curr_url = buildURL(window);
+
+  onMouseout(e);
+  exitRegionSelection();
 
   requestRegisteredRegions(function (regions) {
     var index = encodeDOM(elem);
@@ -133,8 +140,7 @@ function onClick(e) {
     registered_regions[index] = { active: true, hash_val: hash_val };
   });
 
-  window.setTimeout(function () { onMouseout(e) }, 1000);
-  exitRegionSelection();
+  return false;
 }
 
 var registered_regions = null;
@@ -195,6 +201,10 @@ function exitRegionSelection() {
 
     dom.classList.remove('crawl-monitored-self');
     dom.classList.remove('crawl-monitored-other');
+
+    if (dom.classList.length == 0) {
+      dom.removeAttribute('class');
+    }
   }
 
   tagged_dom_indexes.length = 0;
