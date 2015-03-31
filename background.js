@@ -1,10 +1,11 @@
-var SERVER_ENDPOINT = "http://localhost:9292";
+// var SERVER_ENDPOINT = "http://localhost:9292/";
+var SERVER_ENDPOINT = "https://quiet-ravine-7972.herokuapp.com/";
 
 function requestEvents(args) {
   var xhr = new XMLHttpRequest();
-  var url = SERVER_ENDPOINT + "/events";
+  var url = SERVER_ENDPOINT + "events";
 
-  if (args.start_at != undefined) {
+  if (args.start_at !== undefined) {
     url = url + "?start_at=" + args.start_at;
   }
 
@@ -19,16 +20,16 @@ function requestEvents(args) {
         console.error("requestEvents");
       }
     }
-  }
+  };
 
   xhr.send();
 }
 
 function requestRegions(url, args) {
   var xhr = new XMLHttpRequest();
-  var url = SERVER_ENDPOINT + "/urls/" + encodeURIComponent(url);
+  var full_url = SERVER_ENDPOINT + "urls/" + encodeURIComponent(url);
 
-  xhr.open("GET", url, true);
+  xhr.open("GET", full_url, true);
   xhr.onreadystatechange = function () {
     if (xhr.readyState == 4) {
       if (xhr.responseText) {
@@ -39,16 +40,16 @@ function requestRegions(url, args) {
         console.error("requestRegions");
       }
     }
-  }
+  };
 
   xhr.send();
 }
 
 function updateRegionsForUrl(url, regions) {
   var xhr = new XMLHttpRequest();
-  var url = SERVER_ENDPOINT + "/urls/" + encodeURIComponent(url);
+  var full_url = SERVER_ENDPOINT + "urls/" + encodeURIComponent(url);
 
-  xhr.open("PUT", url, true);
+  xhr.open("PUT", full_url, true);
 
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.onreadystatechange = function () {
@@ -57,7 +58,7 @@ function updateRegionsForUrl(url, regions) {
         console.error("updateRegionsForUrl");
       }
     }
-  }
+  };
 
   xhr.send(JSON.stringify({regions: regions}));
 }
@@ -67,7 +68,7 @@ function updateRegionsForUrl(url, regions) {
 var unread_count = 0;
 
 function isEmpty(obj) {
-  return !obj || (Object.getOwnPropertyNames(obj).length == 0);
+  return !obj || (Object.getOwnPropertyNames(obj).length === 0);
 }
 
 function onInit() {
@@ -121,7 +122,7 @@ function refreshEvents() {
                 items.monitors[events.data[i].url][events.data[i].index] = {
                   active: false,
                   hash_val: events.data[i].hash_val
-                }
+                };
               }
             }
           }
@@ -160,7 +161,7 @@ function updateRegionsToMonitors(url, new_regions) {
     var regions = items.monitors[url];
 
     for (var i in new_regions) {
-      regions[new_regions[i].index].hash_val = new_regions[i].hash_val
+      regions[new_regions[i].index].hash_val = new_regions[i].hash_val;
     }
 
     chrome.storage.local.set({monitors: items.monitors});
@@ -179,7 +180,7 @@ function insertRegionToMonitors(url, new_region, existing_regions) {
     regions[new_region.index] = {
       active: true,
       hash_val: new_region.hash_val
-    }
+    };
 
     chrome.storage.local.set({ monitors: items.monitors });
   });
@@ -216,13 +217,13 @@ chrome.runtime.onMessage.addListener(
                 for (var i in data.regions) {
                   remote_regions[data.regions[i].index] = {
                     active: false, hash_val: data.regions[i].hash_val
-                  }
+                  };
                 }
                 sendResponse(remote_regions);
               }
             });
           }
-        })
+        });
         break;
       case 'request_events':
         var published = events_queue.slice(0);

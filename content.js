@@ -42,7 +42,7 @@ function decodeDOM(breadcrumb_str) {
 function hashCode(text) {
   var hash = 0;
 
-  if (text.length == 0) {
+  if (text.length === 0) {
     return hash;
   }
 
@@ -88,7 +88,7 @@ function checkContent() {
           regions: changed_regions
         });
       } else {
-        console.log("[monitor] no changes have been detected.")
+        console.log("[monitor] no changes have been detected.");
       }
     } else {
       console.log("[monitor] not a target.");
@@ -110,7 +110,7 @@ function onMouseout(e) {
   if(elem.classList.contains("crawl-hover")) {
     elem.classList.remove("crawl-hover");
 
-    if (elem.classList.length == 0) {
+    if (elem.classList.length === 0) {
       elem.removeAttribute('class');
     }
   }
@@ -202,7 +202,7 @@ function exitRegionSelection() {
     dom.classList.remove('crawl-monitored-self');
     dom.classList.remove('crawl-monitored-other');
 
-    if (dom.classList.length == 0) {
+    if (dom.classList.length === 0) {
       dom.removeAttribute('class');
     }
   }
