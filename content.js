@@ -191,7 +191,12 @@ function enterRegionSelection() {
 function exitRegionSelection() {
   console.log('exitRegionSelection');
 
-  document.getElementsByTagName('html')[0].classList.remove('crawl-region-selection');
+  var html_elem = document.getElementsByTagName('html')[0];
+  html_elem.classList.remove('crawl-region-selection');
+  if (html_elem.classList.length === 0) {
+    html_elem.removeAttribute('class');
+  }
+
   document.removeEventListener('mouseover', onMouseover);
   document.removeEventListener('mouseout', onMouseout);
   document.removeEventListener('click', onClick);

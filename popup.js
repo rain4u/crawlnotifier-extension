@@ -5,6 +5,7 @@ function enterRegionSelection() {
     });
   });
 
+  window.close();
   return false;
 }
 
@@ -15,6 +16,7 @@ function exitRegionSelection() {
     });
   });
 
+  window.close();
   return false;
 }
 

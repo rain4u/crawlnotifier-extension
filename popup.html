@@ -2,10 +2,15 @@
 <html>
 <head>
   <script src="popup.js"></script>
+  <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+  <style type="text/css">
+    body { width: 280px; }
+  </style>
 </head>
 <body>
-  <a id="enter-region-selection" href="#">Add new region</a>
-  <a id="exit-region-selection" href="#">Cancel</a>
+  <button type="button" id="enter-region-selection" class="btn btn-primary btn-block">Add new region</button>
+  <button type="button" id="exit-region-selection" class="btn btn-danger btn-block">Cancel</button>
+
   <table id="events"></table>
 </body>
 </html>
