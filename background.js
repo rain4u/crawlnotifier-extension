@@ -73,20 +73,20 @@ function isEmpty(obj) {
 
 function onInit() {
   // FIXME: for test purpose.
-  // chrome.storage.local.set({ "monitors": {} });
-  chrome.storage.local.set({
+  /*chrome.storage.local.set({
     "monitors": {
       'http://itswindtw.github.io/': {
         '#net-info-container': { active: true, hash_val: 150675848 }
       }
     }
-  });
+  });*/
+  chrome.storage.local.set({ "monitors": {} });
 
   requestEvents({
     success: function (xhr, events) {
       // FIXME: for test purpose
-      // chrome.storage.local.set({"last_event_id": events.paging.last});
-      chrome.storage.local.set({ last_event_id: 0 });
+      // chrome.storage.local.set({ last_event_id: 0 });
+      chrome.storage.local.set({"last_event_id": events.paging.last});
     }
   });
 
