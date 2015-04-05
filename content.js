@@ -143,6 +143,18 @@ function onClick(e) {
   return false;
 }
 
+function onKeyup(e) {
+  if (e.keyCode == 27) { // 27 is for "ESC"
+   
+    // according to design, there should always be only one crawl-hover 
+    var hover_elem = document.getElementsByClassName('crawl-hover')[0];
+    hover_elem.classList.remove("crawl-hover");
+
+    exitRegionSelection(); 
+  }
+}
+
+
 var registered_regions = null;
 
 function requestRegisteredRegions(callback) {
@@ -165,11 +177,12 @@ var tagged_dom_indexes = [];
 
 function enterRegionSelection() {
   console.log('enterRegionSelection');
-
+  
   document.getElementsByTagName('html')[0].classList.add('crawl-region-selection');
   document.addEventListener('mouseover', onMouseover);
   document.addEventListener('mouseout', onMouseout);
   document.addEventListener('click', onClick);
+  document.addEventListener('keyup', onKeyup);
 
   requestRegisteredRegions(function (regions) {
     for (var index in regions) {
@@ -200,6 +213,7 @@ function exitRegionSelection() {
   document.removeEventListener('mouseover', onMouseover);
   document.removeEventListener('mouseout', onMouseout);
   document.removeEventListener('click', onClick);
+  document.removeEventListener('keyup', onKeyup);
 
   for (var i in tagged_dom_indexes) {
     var dom = decodeDOM(tagged_dom_indexes[i]);
