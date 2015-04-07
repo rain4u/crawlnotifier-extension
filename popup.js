@@ -20,13 +20,7 @@ function exitRegionSelection() {
   return false;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var enter_btn = document.getElementById('enter-region-selection');
-  var exit_btn = document.getElementById('exit-region-selection');
-
-  enter_btn.addEventListener('click', enterRegionSelection);
-  exit_btn.addEventListener('click', exitRegionSelection);
-
+function loadEvents() {
   chrome.runtime.sendMessage({
     event_type: "request_events",
   }, function (events) {
@@ -38,5 +32,15 @@ document.addEventListener('DOMContentLoaded', function() {
       row.innerHTML = events[i].url;
     }
   });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var enter_btn = document.getElementById('enter-region-selection');
+  var exit_btn = document.getElementById('exit-region-selection');
+
+  enter_btn.addEventListener('click', enterRegionSelection);
+  exit_btn.addEventListener('click', exitRegionSelection);
+
+  loadEvents();
 });
 
