@@ -34,6 +34,26 @@ function loadEvents() {
   });
 }
 
+function loadMonitoringRegions() {
+  var monitoring_list = document.getElementById("monitoring-regions");
+
+  chrome.storage.local.get("monitors", function (items) {
+    for (url in items.monitors) {
+      var link = document.createElement("a");
+
+      link.className = "list-group-item";
+      link.href = url;
+      link.innerHTML = url;
+
+      link.addEventListener('click', function(e) {
+        chrome.tabs.create({url:e.target.href});
+      });
+      
+      monitoring_list.appendChild(link);
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   var enter_btn = document.getElementById('enter-region-selection');
   var exit_btn = document.getElementById('exit-region-selection');
@@ -42,5 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
   exit_btn.addEventListener('click', exitRegionSelection);
 
   loadEvents();
+  loadMonitoringRegions();
 });
 
