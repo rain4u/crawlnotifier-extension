@@ -110,9 +110,16 @@ function refreshEvents() {
       success: function (xhr, events) {
         if (events.paging.last != items.last_event_id) {
           var changed_regions = [];
+          var hashmap = {};
 
-          for (var i = events.data.length-1; i >= 0; --i) {
+          for (var i = 0; i < events.data.length; i++) {
+
+            var key = events.data[i].url + events.data[i].index;
+            if (typeof hashmap[key] === 'undefined') hashmap[key] = true;
+            else continue;
+
             if (!isEmpty(items.monitors[events.data[i].url])) {
+
               var region = items.monitors[events.data[i].url][events.data[i].index];
 
               if (region && region.active &&
@@ -126,7 +133,7 @@ function refreshEvents() {
               }
             }
           }
-
+          
           events_queue = events_queue.concat(changed_regions);
           unread_count = changed_regions.length;
           if (unread_count > 0) {

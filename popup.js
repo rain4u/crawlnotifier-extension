@@ -35,7 +35,7 @@ function loadEvents() {
     event_type: "request_events",
   }, function (events) {
     console.log('feeding events in popup.html', events);
-    var updated_list = document.getElementById('updated_regions');
+    var updated_list = document.getElementById('updated-regions');
 
     for (var i in events) {
       var link = createLinkItem(events[i].url);
