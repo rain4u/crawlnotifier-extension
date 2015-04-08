@@ -20,35 +20,39 @@ function exitRegionSelection() {
   return false;
 }
 
+function createLinkItem(url) {
+  var link = document.createElement("a");
+  link.href = url;
+  link.innerHTML = url;
+  link.addEventListener('click', function(e) {
+    chrome.tabs.create({url:e.target.href});
+  });
+  return link;
+}
+
 function loadEvents() {
   chrome.runtime.sendMessage({
     event_type: "request_events",
   }, function (events) {
     console.log('feeding events in popup.html', events);
-    var table = document.getElementById('events');
+    var updated_list = document.getElementById('updated_regions');
 
     for (var i in events) {
-      var row = table.insertRow(-1);
-      row.innerHTML = events[i].url;
+      var link = createLinkItem(events[i].url);
+      link.classList.add("list-group-item", "list-group-item-success");
+      updated_list.appendChild(link);
     }
   });
 }
 
 function loadMonitoringRegions() {
-  var monitoring_list = document.getElementById("monitoring-regions");
-
   chrome.storage.local.get("monitors", function (items) {
+    console.log('feeding monitoring regions in popup.html', items.monitors);
+    var monitoring_list = document.getElementById("monitoring-regions");
+
     for (url in items.monitors) {
-      var link = document.createElement("a");
-
-      link.className = "list-group-item";
-      link.href = url;
-      link.innerHTML = url;
-
-      link.addEventListener('click', function(e) {
-        chrome.tabs.create({url:e.target.href});
-      });
-      
+      var link = createLinkItem(url);
+      link.classList.add("list-group-item");
       monitoring_list.appendChild(link);
     }
   });
