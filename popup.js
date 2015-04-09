@@ -20,14 +20,23 @@ function exitRegionSelection() {
   return false;
 }
 
-function createLinkItem(url) {
+function createLinkItem(url, region_number) {
   var link = document.createElement("a");
   link.href = url;
-  link.innerHTML = url;
+  link.innerHTML = url + '<span class="badge">' + region_number + '</span>';
   link.addEventListener('click', function(e) {
     chrome.tabs.create({url:e.target.href});
   });
   return link;
+}
+
+function groupEvents(events) {
+  var grouped_events = {}; // {url: region_number}
+  for (var i in events) {
+    if (typeof grouped_events[events[i].url] === 'undefined') grouped_events[events[i].url] = 0;
+    grouped_events[events[i].url]++;
+  }
+  return grouped_events;
 }
 
 function loadEvents() {
@@ -36,13 +45,22 @@ function loadEvents() {
   }, function (events) {
     console.log('feeding events in popup.html', events);
     var updated_list = document.getElementById('updated-regions');
+    var grouped_events = groupEvents(events); // {url: region_number}
 
-    for (var i in events) {
-      var link = createLinkItem(events[i].url);
+    for (var url in grouped_events) {
+      var link = createLinkItem(url, grouped_events[url]);
       link.classList.add("list-group-item", "list-group-item-success");
       updated_list.appendChild(link);
     }
   });
+}
+
+function activeRegionNumber(regions) {
+  var region_number = 0;
+  for (var region in regions) {
+    if (regions[region].active) region_number++;
+  }
+  return region_number;
 }
 
 function loadMonitoringRegions() {
@@ -51,7 +69,7 @@ function loadMonitoringRegions() {
     var monitoring_list = document.getElementById("monitoring-regions");
 
     for (url in items.monitors) {
-      var link = createLinkItem(url);
+      var link = createLinkItem(url, activeRegionNumber(items.monitors[url]));
       link.classList.add("list-group-item");
       monitoring_list.appendChild(link);
     }
