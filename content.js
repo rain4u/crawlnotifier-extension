@@ -138,6 +138,8 @@ function onClick(e) {
     });
 
     registered_regions[index] = { active: true, hash_val: hash_val };
+
+    alert("success!");
   });
 
   return false;
