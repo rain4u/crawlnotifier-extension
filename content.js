@@ -1,61 +1,10 @@
-/* utilities */
-
-function buildURL(window) {
-  return window.location.protocol + "//" + window.location.host + window.location.pathname;
-}
-
-function encodeDOM(elem) {
-  var breadcrumbs = [];
-
-  while (elem != document) {
-    if (elem.id) {
-      breadcrumbs.unshift('#' + elem.id);
-      break;
-    }
-
-    var idx = Array.prototype.indexOf.call(elem.parentNode.childNodes, elem);
-    breadcrumbs.unshift(idx);
-
-
-    elem = elem.parentNode;
-  }
-
-  return breadcrumbs.join(' ');
-}
-
-function decodeDOM(breadcrumb_str) {
-  var elem = document;
-  var breadcrumbs = breadcrumb_str.split(' ');
-
-  for (var i in breadcrumbs) {
-    if (breadcrumbs[i].startsWith('#')) {
-      elem = elem.getElementById(breadcrumbs[i].substr(1));
-    } else {
-      elem = elem.childNodes[breadcrumbs[i]];
-    }
-  }
-
-  return elem;
-}
-
-// Source: http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
-function hashCode(text) {
-  var hash = 0;
-
-  if (text.length === 0) {
-    return hash;
-  }
-
-  for (i = 0; i < text.length; i++) {
-    c = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + c;
-    hash = hash & hash;
-  }
-
-  return hash;
-}
-
-/* extension */
+/* Utility functions:
+    buildURL(window)
+    encodeDOM(elem, document)
+    decodeDOM(breadcrumb_str, document)
+    hashCode(text)
+** comes from utilities.js
+*/
 
 function checkContent() {
   // check with local storage
@@ -69,7 +18,7 @@ function checkContent() {
 
       // if there is a record, fetch the element by index and compute hash
       for (var key in regions) {
-        var dom = decodeDOM(key);
+        var dom = decodeDOM(key, document);
         var hash = hashCode(dom.innerHTML);
 
         if (hash != regions[key].hash_val) {
@@ -124,7 +73,7 @@ function onClick(e) {
   exitRegionSelection();
 
   requestRegisteredRegions(function (regions) {
-    var index = encodeDOM(elem);
+    var index = encodeDOM(elem, document);
     var hash_val = hashCode(elem.innerHTML);
 
     chrome.runtime.sendMessage({
@@ -189,7 +138,7 @@ function enterRegionSelection() {
   requestRegisteredRegions(function (regions) {
     for (var index in regions) {
       if (regions.hasOwnProperty(index)) {
-        var dom = decodeDOM(index);
+        var dom = decodeDOM(index, document);
 
         if (regions[index].active) {
           dom.classList.add('crawl-monitored-self');
@@ -218,7 +167,7 @@ function exitRegionSelection() {
   document.removeEventListener('keyup', onKeyup);
 
   for (var i in tagged_dom_indexes) {
-    var dom = decodeDOM(tagged_dom_indexes[i]);
+    var dom = decodeDOM(tagged_dom_indexes[i], document);
 
     dom.classList.remove('crawl-monitored-self');
     dom.classList.remove('crawl-monitored-other');
